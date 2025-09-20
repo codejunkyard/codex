@@ -1,13 +1,20 @@
 #include <Arduino.h>
 #include <math.h>
+#include <Adafruit_NeoPixel.h>
 
-// Update these pin assignments to match how you wired the 8x8 LED matrix.
-// The sketch assumes a common-anode row / common-cathode column layout where
-// driving a row HIGH and a column LOW lights the selected LED.
-const uint8_t rowPins[8] = {2, 3, 4, 5, 6, 7, 8, 9};
-const uint8_t colPins[8] = {10, 11, 12, 13, A0, A1, A2, A3};
+// 8x8 NeoPixel matrix driven from a single data pin. Adjust DATA_PIN if you
+// soldered the signal wire to a different GPIO on the Nano ESP32.
+const uint8_t DATA_PIN = 6;
 
-static uint8_t displayBuffer[8];
+const uint8_t NUM_ROWS = 8;
+const uint8_t NUM_COLS = 8;
+const uint16_t NUM_PIXELS = NUM_ROWS * NUM_COLS;
+
+// Most WS2812 / SK6812 matrices use GRB order running at 800 KHz.
+Adafruit_NeoPixel strip(NUM_PIXELS, DATA_PIN, NEO_GRB + NEO_KHZ800);
+
+// In-memory frame buffer storing the color for each LED.
+static uint32_t frameBuffer[NUM_PIXELS];
 
 enum AnimationPhase {
   PHASE_SPIRAL = 0,
@@ -27,8 +34,6 @@ uint8_t waveLoops = 0;
 
 uint8_t sparkleFrame = 0;
 
-const uint16_t ROW_HOLD_MICROS = 1100; // Tune for brightness vs. flicker.
-
 // Spiral path that walks the entire matrix from the outside in.
 const uint8_t SPIRAL_PATH_LENGTH = 64;
 const uint8_t spiralPath[SPIRAL_PATH_LENGTH][2] = {
@@ -43,58 +48,96 @@ const uint8_t spiralPath[SPIRAL_PATH_LENGTH][2] = {
   {2, 2}, {2, 3}, {2, 4}, {2, 5},
   {3, 5}, {4, 5}, {5, 5},
   {5, 4}, {5, 3}, {5, 2},
-  {4, 2}, {3, 2}, {3, 3}, {3, 4}, {4, 4}, {4, 3}
+  {4, 2}, {3, 2}, {3, 3}, {3, 4}, {4, 4}, {4, 3},
 };
 
 void clearBuffer() {
-  memset(displayBuffer, 0, sizeof(displayBuffer));
+  memset(frameBuffer, 0, sizeof(frameBuffer));
 }
 
-void setPixel(uint8_t row, uint8_t col, bool on = true) {
-  if (row >= 8 || col >= 8) {
+// Convert a row/column pair into the NeoPixel index. Most 8x8 matrices are
+// wired in a serpentine layout where adjacent columns run in opposite
+// directions. Flip the logic here if your panel is wired differently.
+uint16_t xyToIndex(uint8_t row, uint8_t col) {
+  if (col % 2 == 0) {
+    return (col * NUM_ROWS) + row;
+  }
+  return (col * NUM_ROWS) + (NUM_ROWS - 1 - row);
+}
+
+void setPixel(uint8_t row, uint8_t col, uint32_t color) {
+  if (row >= NUM_ROWS || col >= NUM_COLS) {
     return;
   }
-  if (on) {
-    displayBuffer[row] |= (1 << col);
-  } else {
-    displayBuffer[row] &= ~(1 << col);
+  frameBuffer[xyToIndex(row, col)] = color;
+}
+
+uint32_t makeColor(uint8_t r, uint8_t g, uint8_t b) {
+  return strip.Color(r, g, b);
+}
+
+void pushBuffer() {
+  for (uint16_t i = 0; i < NUM_PIXELS; ++i) {
+    strip.setPixelColor(i, frameBuffer[i]);
   }
+  strip.show();
 }
 
 void renderSpiral(uint8_t headIndex) {
   clearBuffer();
-  const uint8_t tailLength = 8;
+  const uint8_t tailLength = 10;
   for (uint8_t i = 0; i < tailLength; ++i) {
     uint8_t index = (headIndex + SPIRAL_PATH_LENGTH - i) % SPIRAL_PATH_LENGTH;
-    setPixel(spiralPath[index][0], spiralPath[index][1], true);
+    uint8_t row = spiralPath[index][0];
+    uint8_t col = spiralPath[index][1];
+    uint8_t intensity = 20 + (tailLength - i) * 12;
+    setPixel(row, col, makeColor(intensity, intensity / 4, 0));
   }
+  pushBuffer();
 }
 
 void renderWave(uint16_t step) {
   clearBuffer();
-  for (uint8_t col = 0; col < 8; ++col) {
+  for (uint8_t col = 0; col < NUM_COLS; ++col) {
     float angle = (step * 0.32f) + (col * 0.55f);
-    float normalized = (sinf(angle) + 1.0f) * 3.5f; // Map sine output (-1..1) to (0..7).
+    float normalized = (sinf(angle) + 1.0f) * 3.5f; // Map -1..1 to 0..7.
     uint8_t primaryRow = static_cast<uint8_t>(normalized + 0.5f);
     if (primaryRow > 7) {
       primaryRow = 7;
     }
-    setPixel(primaryRow, col, true);
+    setPixel(primaryRow, col, makeColor(0, 0, 150));
 
     int secondaryRow = primaryRow + (sinf(angle + 1.2f) > 0 ? 1 : -1);
-    if (secondaryRow >= 0 && secondaryRow < 8) {
-      setPixel(static_cast<uint8_t>(secondaryRow), col, true);
+    if (secondaryRow >= 0 && secondaryRow < NUM_ROWS) {
+      setPixel(static_cast<uint8_t>(secondaryRow), col, makeColor(0, 40, 120));
     }
   }
+  pushBuffer();
 }
 
 void renderSparkle(uint8_t frame) {
   (void)frame;
   clearBuffer();
-  const uint8_t sparkleCount = 12;
+  const uint8_t sparkleCount = 14;
   for (uint8_t i = 0; i < sparkleCount; ++i) {
-    setPixel(random(8), random(8), true);
+    uint8_t row = random(NUM_ROWS);
+    uint8_t col = random(NUM_COLS);
+    uint8_t hue = random(3);
+    uint32_t color = 0;
+    switch (hue) {
+      case 0:
+        color = makeColor(120, 120, 20);
+        break;
+      case 1:
+        color = makeColor(30, 0, 140);
+        break;
+      default:
+        color = makeColor(0, 80, 150);
+        break;
+    }
+    setPixel(row, col, color);
   }
+  pushBuffer();
 }
 
 void nextPhase(AnimationPhase newPhase) {
@@ -118,33 +161,6 @@ void nextPhase(AnimationPhase newPhase) {
       renderSparkle(sparkleFrame);
       break;
   }
-}
-
-void refreshDisplay() {
-  static uint8_t currentRow = 0;
-  static unsigned long lastSwitch = 0;
-  unsigned long now = micros();
-
-  if ((now - lastSwitch) < ROW_HOLD_MICROS) {
-    return;
-  }
-
-  // Turn off previous row and reset columns.
-  digitalWrite(rowPins[currentRow], LOW);
-  for (uint8_t col = 0; col < 8; ++col) {
-    digitalWrite(colPins[col], HIGH);
-  }
-
-  currentRow = (currentRow + 1) % 8;
-
-  // Apply column states for the new row.
-  for (uint8_t col = 0; col < 8; ++col) {
-    bool ledOn = (displayBuffer[currentRow] & (1 << col)) != 0;
-    digitalWrite(colPins[col], ledOn ? LOW : HIGH);
-  }
-
-  digitalWrite(rowPins[currentRow], HIGH);
-  lastSwitch = now;
 }
 
 void runAnimation() {
@@ -196,12 +212,9 @@ void runAnimation() {
 }
 
 void setup() {
-  for (uint8_t i = 0; i < 8; ++i) {
-    pinMode(rowPins[i], OUTPUT);
-    pinMode(colPins[i], OUTPUT);
-    digitalWrite(rowPins[i], LOW);
-    digitalWrite(colPins[i], HIGH);
-  }
+  strip.begin();
+  strip.setBrightness(80); // Master brightness scaler (0-255).
+  strip.show();            // Clear all pixels.
 
   randomSeed(analogRead(A0));
 
@@ -211,6 +224,5 @@ void setup() {
 }
 
 void loop() {
-  refreshDisplay();
   runAnimation();
 }
