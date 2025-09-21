@@ -1,0 +1,7 @@
+WSL:
+    sudo apt-get update
+    sudo apt-get install -y dotnet-sdk-8.0
+
+dotnet new console                      # create new project
+dotnet run                              # run the compiled C# program
+dotnet build                            # build the program

@@ -1,0 +1,6 @@
+python3 -m venv venv                    # Create a Python virtual environment in the 'venv' folder
+source venv/bin/activate                # Activate the virtual environment for the current shell
+pip install pygame                      # Install Pygame inside the virtual environment
+sudo apt install python3-tk             # Install Tkinter system-wide for GUI support
+
+python3 ./hello.py                      # run Python script

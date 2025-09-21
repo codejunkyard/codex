@@ -1,0 +1,2 @@
+gcc hello.c -o hello                    # compile to binary
+./hello                                 # run the compiled C program

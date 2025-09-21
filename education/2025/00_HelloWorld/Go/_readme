@@ -1,0 +1,2 @@
+go build hello.go                       # produces executable: ./main (Linux/macOS) or main.exe (Windows)
+go run hello.go                         # run the compiled Go program

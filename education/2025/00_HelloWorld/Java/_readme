@@ -1,0 +1,2 @@
+javac Hello.java                        # compile -> Hello.class
+java Hello                              # run the compiled bytecode

@@ -1,0 +1,2 @@
+chmod +x hello.sh                       # set execute permission
+./hello.sh                              # run bash script

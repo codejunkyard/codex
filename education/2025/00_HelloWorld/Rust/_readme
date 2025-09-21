@@ -1,0 +1,6 @@
+curl https://sh.rustup.rs -sSf | sh     # Download and install Rust compiler
+cargo new --vcs none                    # create new cargo project
+cargo run                               # run the cargo program
+cargo build                             # build the binary
+cargo build --release                   # build a release version of the binary
+./target/release/hello                  # runs the compiled binary
