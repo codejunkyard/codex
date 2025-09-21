@@ -6,9 +6,9 @@ Git est un système de contrôle de version distribué qui aide les équipes à 
 
 Chaque fichier d'un dépôt Git passe par trois états principaux :
 
-- **Non suivi** – Fichiers présents dans votre répertoire de travail mais inconnus de Git. Utilisez `git status` pour les lister.
-- **Suivi (non modifié ou modifié)** – Fichiers que Git connaît déjà. Ils peuvent être inchangés ou contenir de nouvelles modifications.
-- **Indexé** – Fichiers prêts à être inclus dans le prochain commit. L'indexation capture un instantané du fichier à cet instant.
+- **Non suivi** (Untracked) – Fichiers présents dans votre répertoire de travail mais inconnus de Git. Utilisez `git status` pour les lister.
+- **Suivi (non modifié ou modifié)** (tracked) – Fichiers que Git connaît déjà. Ils peuvent être inchangés ou contenir de nouvelles modifications.
+- **Indexé** (staged) – Fichiers prêts à être inclus dans le prochain commit. L'indexation capture un instantané du fichier à cet instant.
 
 Utilisez souvent `git status` pour vérifier où se trouvent vos fichiers dans ce cycle de vie.
 
