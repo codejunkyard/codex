@@ -1,0 +1,43 @@
+                          ┌─────────────────┐
+                          │  Working Dir    │
+                          │ (your files)    │
+                          └─────────────────┘
+                                  │
+                              git status
+                                  │
+                ┌─────────────────┴──────────────────┐
+                │                                    │
+        (new/changed file)                   (untracked file)
+                │                                    │
+                ▼                                    ▼
+       ┌──────────────────┐                ┌──────────────────┐
+       │  Modified state  │                │  Untracked state │
+       └──────────────────┘                └──────────────────┘
+                │                                    │
+                └───────────────┐   ┌────────────────┘
+                                ▼   ▼
+                        git add <folder(s)/file(s)>
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │  Staging Area    │ ← also called "Index"
+                         │ (git add puts it │
+                         │  here)           │ Undo: git restore --staged <folder(s)/file(s)>
+                         └──────────────────┘
+                                  │
+                        git commit -m "msg"
+                                  │
+                                  ▼
+                         ┌──────────────────┐ Undo commit:
+                         │ Local Repository │      staged: git reset --soft <commit-hash> (HEAD~1)
+                         │  (.git/ objects) │   un-staged: git reset --mixed <commit-hash> (HEAD~1)
+                         └──────────────────┘     discard: git reset --hard <commit-hash> (HEAD~1)
+                                  │
+
+----------------------- git push origin main (git push) --------------------------------
+│
+▼
+┌──────────────────┐ Undo:
+│ Remote Repository│ New commit: git revert <commit-hash>
+│ (e.g. GitHub) │
+└──────────────────┘
