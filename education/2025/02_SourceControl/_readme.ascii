@@ -33,11 +33,10 @@
                          │  (.git/ objects) │   un-staged: git reset --mixed <commit-hash> (HEAD~1)
                          └──────────────────┘     discard: git reset --hard <commit-hash> (HEAD~1)
                                   │
-
------------------------ git push origin main (git push) --------------------------------
-│
-▼
-┌──────────────────┐ Undo:
-│ Remote Repository│ New commit: git revert <commit-hash>
-│ (e.g. GitHub) │
-└──────────────────┘
+                        git push origin main (git push)
+                                  │
+                                  ▼
+                         ┌──────────────────┐ Undo:
+                         │ Remote Repository│  New commit: git revert <commit-hash>
+                         │ (e.g. GitHub)    │
+                         └──────────────────┘
