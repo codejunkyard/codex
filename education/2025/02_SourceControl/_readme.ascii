@@ -1,7 +1,13 @@
+git config --global user.name "Your Name"
+git config --global user.email "your.email@example.com"
+git config --list
+
                           ┌─────────────────┐
                           │  Working Dir    │
                           │ (your files)    │
                           └─────────────────┘
+                                  │
+                               git init
                                   │
                               git status
                                   │
@@ -10,19 +16,20 @@
         (new/changed file)                   (untracked file)
                 │                                    │
                 ▼                                    ▼
-       ┌──────────────────┐                ┌──────────────────┐
-       │  Modified state  │                │  Untracked state │
-       └──────────────────┘                └──────────────────┘
+        ┌────────────────┐                  ┌─────────────────┐
+        │ Modified state │                  │ Untracked state │
+        └────────────────┘                  └─────────────────┘
                 │                                    │
                 └───────────────┐   ┌────────────────┘
                                 ▼   ▼
-                        git add <folder(s)/file(s)>
+                        git add <folder(s)/|file(s)|.>  : Tracks
+                        git rm <file|-r folder(s)>      : Delete from disk
+                        git mv <old> <new>              : Rename
                                   │
                                   ▼
                          ┌──────────────────┐
                          │  Staging Area    │ ← also called "Index"
-                         │ (git add puts it │
-                         │  here)           │ Undo: git restore --staged <folder(s)/file(s)>
+                         │                  │ Undo: git restore --staged <folder(s)/file(s)>
                          └──────────────────┘
                                   │
                         git commit -m "msg"
@@ -33,7 +40,11 @@
                          │  (.git/ objects) │   un-staged: git reset --mixed <commit-hash> (HEAD~1)
                          └──────────────────┘     discard: git reset --hard <commit-hash> (HEAD~1)
                                   │
-                        git push origin main (git push)
+                         ┌──────────────────┐  git remote add origin https://github.com/username/repo.git
+                         │ Configure Remote │  git remote -v
+                         └──────────────────┘  git remote set-url origin https://github.com/username/new-repo.git
+                                  │
+                        git push -u origin main (git push)
                                   │
                                   ▼
                          ┌──────────────────┐ Undo:
