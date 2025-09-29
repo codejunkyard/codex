@@ -251,3 +251,5 @@ target
 
 education/2025/05_Performance/GCF_000001405.26_GRCh38_genomic.fna
 education/2025/05_Performance/ecoli_genome.fasta
+
+education/2025/[0-9][0-9]_IoT/**/build/
